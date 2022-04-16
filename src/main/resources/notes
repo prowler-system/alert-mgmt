@@ -1,0 +1,66 @@
+mysql:
+docker run -e MYSQL_ROOT_PASSWORD=welcome1 -e MYSQL_RANDOM_ROOT_PASSWORD=welcome1 -p 3306:3306  mysql:8.0
+
+activemq:
+docker run -p 61616:61616 -p 8161:8161 rmohr/activemq
+
+filebeat:
+docker run -e APP_NAME=logClientApp1 -e HOST_NAME=logClientApp1-host1  --name=filebeat3 --network="host"  --user=root   --volume="$(pwd)/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro"   --volume="/var/lib/docker/containers:/var/lib/docker/containers:ro"   --volume="/var/run/docker.sock:/var/run/docker.sock:ro"   --volume="/Users/nitpatel/my.log:/usr/share/my.log:consistent"   docker.elastic.co/beats/filebeat:8.1.2 filebeat -e --strict.perms=false
+
+kafka consumer test:
+~/Downloads/kafka-3.1.0-src/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic prowler_alert_logs --from-beginning
+
+Kafka:
+docker-compose up -d
+
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+    - /usr/share/my.log
+  include_lines: ['(\.*)(?:4[0-9]{12}(?:[0-9]{3})?|[25][1-7][0-9]{14}|6(?:011|5[0-9][0-9])[0-9]{12}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|(?:2131|1800|35\d{3})\d{11})(\.*)',
+                  '(\.*)([0-9]{9,18})(\.*)', '(\.*)([+]\d{2})?([\s])?\d{10}(\.*)']
+
+processors:
+  - add_id: ~
+  - add_fields:
+      target: project
+      fields:
+        application: '${APP_NAME}'
+        host: '${HOST_NAME}'
+  - script:
+      lang: javascript
+      tag: mask_sensitive
+      source: >
+        function process(event) {
+          var msg = event.Get("message");
+          msg = msg.replace(/(\.*)(?:4[0-9]{12}(?:[0-9]{3})?|[25][1-7][0-9]{14}|6(?:011|5[0-9][0-9])[0-9]{12}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|(?:2131|1800|35\d{3})\d{11})(\.*)/g, "CC************");
+          msg = msg.replace(/(\.*)([+]\d{2})?([\s])?\d{10}(\.*)/g, "MOB**********");
+          msg = msg.replace(/(\.*)([0-9]{9,18})(\.*)/g, "BNK*********");
+          event.Put("message", msg);
+        }
+
+#output.redis:
+#  hosts: ["127.0.0.1"]
+#  key: "prowler_alert_logs"
+#  db: 0
+#  timeout: 5
+
+output.kafka:
+  # initial brokers for reading cluster metadata
+  hosts: ["127.0.0.1:9092"]
+  topic: prowler_alert_logs
+  partition.round_robin:
+    reachable_only: false
+
+  required_acks: 1
+  compression: gzip
+  max_message_bytes: 1000000
+
+logging.to_files: true
+logging.files:
+  path: /usr/share/filebeat1.log
+
+output.console:
+  pretty:true
+

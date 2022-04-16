@@ -1,0 +1,36 @@
+{
+  "@timestamp": "2022-04-15T07:01:47.786Z",
+  "@metadata": {
+    "beat": "filebeat",
+    "type": "_doc",
+    "version": "8.1.2",
+    "_id": "ARIHLIABkDhzo1FyJsKL"
+  },
+  "input": {
+    "type": "log"
+  },
+  "agent": {
+    "ephemeral_id": "e9ce1515-cf5b-4e62-8e58-4823bb6c32de",
+    "id": "4f330a27-005a-4491-9a62-20bf5ad91fab",
+    "name": "docker-desktop",
+    "type": "filebeat",
+    "version": "8.1.2"
+  },
+  "ecs": {
+    "version": "8.0.0"
+  },
+  "host": {
+    "name": "docker-desktop"
+  },
+  "project": {
+    "application": "logClientApp1",
+    "host": "logClientApp1-host1"
+  },
+  "log": {
+    "offset": 90300,
+    "file": {
+      "path": "/usr/share/my.log"
+    }
+  },
+  "message": "[2022-04-15 12:31:42] [INFO   ] Hello from LogProducer with bank account number 911200090!! "
+}
