@@ -23,4 +23,11 @@ public interface AlertsRepository extends CrudRepository<Alert, UUID> {
            nativeQuery = true)
     List<Alert> search(String application, LocalDateTime startTime,
                        LocalDateTime endTime, Integer offset, Integer limit);
+
+    @Query(value = "SELECT * from alert a join suspected_log sl on a.log_id=sl.id WHERE" +
+            " a.status= ?1 ORDER BY sl.logged_at DESC LIMIT ?2",
+           nativeQuery = true)
+    List<Alert> findAlertsByStatus(String status, int batchSize);
+
+    Alert findAlertByLogId(UUID logId);
 }

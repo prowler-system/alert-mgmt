@@ -22,11 +22,11 @@ public class SuspectedLogsController {
 
     @RequestMapping(value="/suspectedlogs", method = RequestMethod.POST)
     public SuspectedLog addSuspectedLog(@RequestBody SuspectedLog log) {
-        return service.addSuspectedLog(log);
+        return service.create(log);
     }
 
     @RequestMapping(value="/suspectedlogs", method = RequestMethod.GET)
     public List<SuspectedLog> getAll() {
-        return service.getAllSuspectedLogs();
+        return service.getAll();
     }
 }

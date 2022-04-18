@@ -1,8 +1,8 @@
 package com.prowler.alertmgmt.api;
 
+import com.prowler.alertmgmt.exception.AlertNotFoundExeption;
 import com.prowler.alertmgmt.model.Alert;
 import com.prowler.alertmgmt.repository.AlertsRepository;
-import com.prowler.alertmgmt.repository.SuspectedLogRepository;
 import com.prowler.alertmgmt.vo.AlertStatus;
 import com.prowler.alertmgmt.vo.Notification;
 
@@ -12,49 +12,55 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
+import io.micrometer.core.annotation.Timed;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 public class AlertsService {
+    private static final Integer DEFAULT_OFFSET = 0;
+    private static final Integer DEFAULT_LIMIT = 20;
     @Autowired
     private NotificationService notificationService;
 
     @Autowired
     private AlertsRepository repository;
 
-    @Autowired
-    private SuspectedLogRepository logRepository;
-
-    public void createAlert(Alert alert) {
-        //log.info("Original alert UUID is >>> "+alert.getId().toString()+", "+alert.getLogId().toString());
-        Alert a = repository.save(alert);
-        boolean sent = notificationService.send(Notification.from(alert));
-        if (sent) {
-            a.setStatus(AlertStatus.NOTIFIED);
-        } else {
-            a.setStatus(AlertStatus.NOTIFY_FAILED);
-        }
-        //log.info("Alert UUID is >>> "+a.getId().toString()+", "+alert.getLogId().toString());
-        repository.save(a);
+    @Timed(value = "createAlert.time", description = "Time taken to create an alert")
+    public Alert createAlert(Alert alert) {
+        Alert created = repository.save(alert);
+        sendNotifications(created);
+        return created;
     }
 
+    public void sendNotifications(Alert alert) {
+        boolean sent = notificationService.send(Notification.from(alert));
+        if (sent) {
+            alert.setStatus(AlertStatus.NOTIFIED);
+        } else {
+            alert.setStatus(AlertStatus.NOTIFY_FAILED);
+        }
+        repository.save(alert);
+    }
+
+    @Timed(value = "getAlert.time", description = "Time taken to fetch an alert")
+    public Alert getAlert(UUID id) {
+        return repository.findById(id).orElseThrow(AlertNotFoundExeption::new);
+    }
+
+    @Timed(value = "searchAlerts.time", description = "Time taken to search alerts")
     public List<Alert> searchAlerts(String application, String host, LocalDateTime startTime,
                                     LocalDateTime endTime, Integer offset, Integer limit) {
-        log.info(application+"; "+host+"; "+startTime+"; "+endTime+"; "+offset+"; "+limit);
-        if (startTime == null) {
-            startTime = LocalDateTime.now(ZoneId.of("UTC")).minusHours(2);
-        }
-        if (endTime == null) {
-            endTime = LocalDateTime.now(ZoneId.of("UTC"));
-        }
-        if (offset == null) {
-            offset = 1;
-        }
-        if (limit == null) {
-            limit = 20;
-        }
+        startTime = Optional.ofNullable(startTime).orElse(LocalDateTime.now(ZoneId.of("UTC")).minusHours(2));
+        endTime = Optional.ofNullable(endTime).orElse(LocalDateTime.now(ZoneId.of("UTC")));
+        offset = Optional.ofNullable(offset).orElse(DEFAULT_OFFSET);
+        limit = Optional.ofNullable(limit).orElse(DEFAULT_LIMIT);
+
+        if (log.isDebugEnabled())
+            log.debug("Searching alerts for criteria: "+application+";"+host+";"+startTime+";"+endTime+";"+offset+";"+limit);
 
         List<Alert> alerts = null;
         if (host == null) {

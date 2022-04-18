@@ -40,8 +40,9 @@ public class EmailNotificationConsumer implements MessageListener {
             log.info("EmailNotificationConsumer.onMessage Sending notification for alert:" + notification.getAlertId());
 
             sendEmail(notification);
+            //message.acknowledge();
         } catch(NotificationException | JMSException | JsonProcessingException e) {
-            log.error("EmailNotificationConsumer.onMessage error occurred : "+e.getMessage(), e);
+            log.error("EmailNotificationConsumer.onMessage error occurred:"+e.getMessage(), e);
             throw new RuntimeException("EmailNotificationConsumer.onMessage error occurred : "+e.getMessage(), e);
         }
     }

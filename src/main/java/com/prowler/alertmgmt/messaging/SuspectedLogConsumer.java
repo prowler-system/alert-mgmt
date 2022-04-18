@@ -1,7 +1,6 @@
 package com.prowler.alertmgmt.messaging;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.prowler.alertmgmt.api.SuspectedLogService;
 import com.prowler.alertmgmt.exception.LogParsingException;
 import com.prowler.alertmgmt.model.LogViolation;
@@ -26,6 +25,8 @@ import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.prowler.alertmgmt.util.JsonUtil.mapper;
+
 @Configuration
 @Slf4j
 public class SuspectedLogConsumer {
@@ -43,13 +44,12 @@ public class SuspectedLogConsumer {
 
     @Autowired
     private SuspectedLogService logService;
-    private static ObjectMapper mapper = new ObjectMapper();
 
     @KafkaListener(topics = "prowler_alert_logs")
     public void listenGroup(String message) {
-        log.info("Received Kafka Message: " + message);
+        log.debug("Received Kafka Message: " + message);
         try {
-            logService.addSuspectedLog(messageToLog(message));
+            logService.create(messageToLog(message));
         } catch (LogParsingException e) {
             //TODO
         }
@@ -85,7 +85,7 @@ public class SuspectedLogConsumer {
                 violations.add(LogViolation.builder().type(type).build());
             }
         }
-        log.info("Log violations for \""+message+"\" : "+violations);
+        log.debug("Log violations for \""+message+"\" : "+violations);
         return violations;
     }
 }

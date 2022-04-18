@@ -1,4 +1,4 @@
-package com.prowler.alertmgmt.messaging;
+package com.prowler.alertmgmt.config;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;

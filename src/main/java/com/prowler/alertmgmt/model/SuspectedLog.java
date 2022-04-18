@@ -1,7 +1,6 @@
 package com.prowler.alertmgmt.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.prowler.alertmgmt.util.JsonUtil;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -16,11 +15,8 @@ import java.util.UUID;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.Index;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
@@ -36,6 +32,9 @@ import lombok.Setter;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(indexes = {
+        @Index(columnList = "application, loggedAt")
+})
 public class SuspectedLog {
     @Id
     @Type(type = "uuid-char")

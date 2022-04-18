@@ -14,8 +14,10 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import lombok.AllArgsConstructor;
@@ -28,6 +30,7 @@ import lombok.Setter;
 @Getter @Setter @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(indexes = @Index(columnList = "status"))
 public class Alert {
     @Id
     @Type(type = "uuid-char")
