@@ -1,5 +1,7 @@
 # alert-mgmt
-Log and alert management system
+This repository takes care of Log and alert management and ingests log events from the agents running on the client application hosts. It also provides functionality to search alerts.
+
+Refer to [the design document](https://docs.google.com/document/d/1LKX0K4bbpBWHyo5ykuyYLBTk9XYsBhCQcjzk0iKBM6M/edit) to get an overview of the entire Prowler system.
 
 # Pre-requisites
 Running this project locally requires one to install Docker and Docker-compose.
