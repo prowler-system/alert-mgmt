@@ -51,7 +51,7 @@ public class SuspectedLogConsumer {
         try {
             logService.create(messageToLog(message));
         } catch (LogParsingException e) {
-            //TODO
+            log.error("SuspectedLogConsumer unexpected error while parsing the received log: "+e.getMessage(), e);
         }
     }
 

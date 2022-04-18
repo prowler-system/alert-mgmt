@@ -1,5 +1,6 @@
 package com.prowler.alertmgmt.api;
 
+import com.prowler.alertmgmt.exception.LogValidationException;
 import com.prowler.alertmgmt.model.Alert;
 import com.prowler.alertmgmt.model.SuspectedLog;
 import com.prowler.alertmgmt.repository.SuspectedLogRepository;
@@ -23,15 +24,35 @@ public class SuspectedLogService {
     private AlertsService alertsService;
 
     public SuspectedLog create(SuspectedLog logg) {
-        if (!hasViolations(logg)) {
-            log.warn("No violations found in the suspected log with the following content: "+logg.getLogContent());
-            return null;
-        }
+        validateLogInput(logg);
+
         SuspectedLog created = repository.save(logg);
         //Alert alert = Alert.builder().logId(created.getId()).log(created).status(AlertStatus.CREATED).build();
         Alert alert = Alert.builder().log(created).status(AlertStatus.CREATED).build();
         alertsService.createAlert(alert);
         return created;
+    }
+
+    private void validateLogInput(SuspectedLog log) {
+        if (log.getApplication() == null || log.getApplication().isBlank()) {
+            throw new LogValidationException("Application is not specified in the log with the following content: "+
+                                                     log.getLogContent());
+        }
+        if (log.getHostName() == null || log.getHostName().isBlank()) {
+            throw new LogValidationException("Hostname is not specified in the log with the following content: "+
+                                                     log.getLogContent());
+        }
+        if (log.getLogFilePath() == null || log.getLogFilePath().isBlank()) {
+            throw new LogValidationException("Log file path is not specified in the log with the following content: "+
+                                                     log.getLogContent());
+        }
+        if (log.getLogContent() == null || log.getLogContent().isBlank()) {
+            throw new LogValidationException("Log content is not specified in the log!!");
+        }
+        if (!hasViolations(log)) {
+            throw new LogValidationException("No violations found in the suspected log with the following content: "+
+                                                     log.getLogContent());
+        }
     }
 
     public List<SuspectedLog> getAll() {
@@ -41,6 +62,6 @@ public class SuspectedLogService {
     }
 
     private boolean hasViolations(SuspectedLog logg) {
-        return !logg.getViolations().isEmpty();
+        return logg.getViolations()!= null && !logg.getViolations().isEmpty();
     }
 }

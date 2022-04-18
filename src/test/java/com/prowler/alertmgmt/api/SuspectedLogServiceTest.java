@@ -1,5 +1,6 @@
 package com.prowler.alertmgmt.api;
 
+import com.prowler.alertmgmt.exception.LogValidationException;
 import com.prowler.alertmgmt.model.Alert;
 import com.prowler.alertmgmt.model.LogViolation;
 import com.prowler.alertmgmt.model.SuspectedLog;
@@ -48,9 +49,11 @@ public class SuspectedLogServiceTest {
     public void createSuspectedLog() {
         UUID logId = UUID.randomUUID();
         LocalDateTime loggedAt = LocalDateTime.now(ZoneId.of("UTC"));
-        List<LogViolation> violations = Arrays.asList(LogViolation.builder().type(ViolationType.CREDIT_CARD_NUMBER).build());
+        List<LogViolation> violations = Arrays.asList(
+                LogViolation.builder().type(ViolationType.CREDIT_CARD_NUMBER).build());
         SuspectedLog log = SuspectedLog.builder().id(logId).application("app").hostName("host").loggedAt(loggedAt)
-                                       .logContent("Mobile num MOB****").logFilePath("/var/application/logs/app.log").violations(violations).build();
+                                       .logFilePath("/a.log").logContent("Mobile num MOB****")
+                                       .logFilePath("/var/application/logs/app.log").violations(violations).build();
         SuspectedLog created = service.create(log);
 
         Assertions.assertEquals("app", created.getApplication());
@@ -62,12 +65,80 @@ public class SuspectedLogServiceTest {
     }
 
     @Test
-    public void createAndGetAllSuspectedLog() {
+    public void createSuspectedLogWithoutViolations() {
+        UUID logId = UUID.randomUUID();
+        LocalDateTime loggedAt = LocalDateTime.now(ZoneId.of("UTC"));
+        SuspectedLog log = SuspectedLog.builder().id(logId).application("app").hostName("host").loggedAt(loggedAt)
+                                       .logFilePath("/a.log").logContent("Mobile num MOB****").build();
+
+        Assertions.assertThrows(LogValidationException.class, () -> {
+            service.create(log);
+        });
+    }
+
+    @Test
+    public void createSuspectedLogWithoutApplication() {
         UUID logId = UUID.randomUUID();
         LocalDateTime loggedAt = LocalDateTime.now(ZoneId.of("UTC"));
         List<LogViolation> violations = Arrays.asList(LogViolation.builder().type(ViolationType.CREDIT_CARD_NUMBER).build());
+        SuspectedLog log = SuspectedLog.builder().id(logId).hostName("host").loggedAt(loggedAt)
+                                       .logFilePath("/a.log").violations(violations).logContent("Mobile num MOB****").build();
+
+        Assertions.assertThrows(LogValidationException.class, () -> {
+            service.create(log);
+        });
+    }
+
+    @Test
+    public void createSuspectedLogWithoutHost() {
+        UUID logId = UUID.randomUUID();
+        LocalDateTime loggedAt = LocalDateTime.now(ZoneId.of("UTC"));
+        List<LogViolation> violations = Arrays.asList(LogViolation.builder().type(ViolationType.CREDIT_CARD_NUMBER).build());
+        SuspectedLog log = SuspectedLog.builder().id(logId).application("app").loggedAt(loggedAt)
+                                       .logFilePath("/a.log").violations(violations).logContent("Mobile num MOB****").build();
+
+        Assertions.assertThrows(LogValidationException.class, () -> {
+            service.create(log);
+        });
+    }
+
+    @Test
+    public void createSuspectedLogWithoutLogContent() {
+        UUID logId = UUID.randomUUID();
+        LocalDateTime loggedAt = LocalDateTime.now(ZoneId.of("UTC"));
+        List<LogViolation> violations = Arrays.asList(
+                LogViolation.builder().type(ViolationType.CREDIT_CARD_NUMBER).build());
         SuspectedLog log = SuspectedLog.builder().id(logId).application("app").hostName("host").loggedAt(loggedAt)
-                                       .logContent("Mobile num MOB****").logFilePath("/var/application/logs/app.log").violations(violations).build();
+                                       .logFilePath("/a.log").violations(violations).build();
+
+        Assertions.assertThrows(LogValidationException.class, () -> {
+            service.create(log);
+        });
+    }
+
+    @Test
+    public void createSuspectedLogWithoutLogFile() {
+        UUID logId = UUID.randomUUID();
+        LocalDateTime loggedAt = LocalDateTime.now(ZoneId.of("UTC"));
+        List<LogViolation> violations = Arrays.asList(
+                LogViolation.builder().type(ViolationType.CREDIT_CARD_NUMBER).build());
+        SuspectedLog log = SuspectedLog.builder().id(logId).application("app").hostName("host").loggedAt(loggedAt)
+                                       .violations(violations).logContent("Mobile num MOB****").build();
+
+        Assertions.assertThrows(LogValidationException.class, () -> {
+            service.create(log);
+        });
+    }
+
+    @Test
+    public void createAndGetAllSuspectedLog() {
+        UUID logId = UUID.randomUUID();
+        LocalDateTime loggedAt = LocalDateTime.now(ZoneId.of("UTC"));
+        List<LogViolation> violations = Arrays.asList(
+                LogViolation.builder().type(ViolationType.CREDIT_CARD_NUMBER).build());
+        SuspectedLog log = SuspectedLog.builder().id(logId).application("app").hostName("host").loggedAt(loggedAt)
+                                       .logContent("Mobile num MOB****").logFilePath("/var/application/logs/app.log")
+                                       .violations(violations).build();
         SuspectedLog created = service.create(log);
 
         List<SuspectedLog> logs = service.getAll();
@@ -80,9 +151,11 @@ public class SuspectedLogServiceTest {
     public void createSuspectedLogCreatesAlert() {
         UUID logId = UUID.randomUUID();
         LocalDateTime loggedAt = LocalDateTime.now(ZoneId.of("UTC"));
-        List<LogViolation> violations = Arrays.asList(LogViolation.builder().type(ViolationType.CREDIT_CARD_NUMBER).build());
+        List<LogViolation> violations = Arrays.asList(
+                LogViolation.builder().type(ViolationType.CREDIT_CARD_NUMBER).build());
         SuspectedLog log = SuspectedLog.builder().id(logId).application("app").hostName("host").loggedAt(loggedAt)
-                                       .logContent("Credit card CC****").logFilePath("/var/application/logs/app.log").violations(violations).build();
+                                       .logContent("Credit card CC****").logFilePath("/var/application/logs/app.log")
+                                       .violations(violations).build();
         service.create(log);
 
         Alert a = alertsRepository.findAlertByLogId(logId);
