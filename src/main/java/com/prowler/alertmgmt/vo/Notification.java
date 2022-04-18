@@ -11,11 +11,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import lombok.extern.slf4j.Slf4j;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
+@Slf4j
 public class Notification {
     private static final String SUBJECT_FORMAT = "URGENT: Security violation detected in the logs for Application %s";
     private String subject;
@@ -25,19 +27,15 @@ public class Notification {
     private UUID   alertId;
 
     public static Notification from(Alert alert) {
-        SuspectedLog log = alert.getLog();
+        SuspectedLog logg = alert.getLog();
         String alertPayload = "";
         try {
-            alertPayload = log.toJson();
+            alertPayload = logg.toJson();
         } catch (JsonProcessingException e) {
-            //TODO
+            log.error("Unexpected error occurred while serializing suspected log: "+e.getMessage(), e);
         }
-        return Notification.builder().application(log.getApplication()).sentTime(LocalDateTime.now()).
-                alertId(alert.getId()).subject(String.format(SUBJECT_FORMAT, log.getApplication())).body(alertPayload).
+        return Notification.builder().application(logg.getApplication()).sentTime(LocalDateTime.now()).
+                alertId(alert.getId()).subject(String.format(SUBJECT_FORMAT, logg.getApplication())).body(alertPayload).
                                    build();
-    }
-
-    public String getSubject() {
-        return String.format(SUBJECT_FORMAT, application);
     }
 }

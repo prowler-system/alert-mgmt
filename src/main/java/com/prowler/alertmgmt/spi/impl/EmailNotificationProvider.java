@@ -37,7 +37,7 @@ public class EmailNotificationProvider implements NotificationProvider {
         props.put("mail.smtp.port", emailConfig.getSmtpPort());
         Session session = Session.getInstance(props, new javax.mail.Authenticator() {
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(emailConfig.getFromAddress(), "Prowler@123");
+                return new PasswordAuthentication(emailConfig.getFromAddress(), emailConfig.getPassword());
             }
         });
 
@@ -51,8 +51,9 @@ public class EmailNotificationProvider implements NotificationProvider {
             Transport.send(message);
             log.debug("Email sent successfully.");
         } catch (MessagingException mex) {
-            log.error("An error occurred while sending email notification for alert", mex);
-            throw new NotificationException("An error occurred while sending email notification for alert", mex);
+            log.error("An error occurred while sending email notification for alert: "+mex.getMessage(), mex);
+            throw new NotificationException("An error occurred while sending email notification for alert: "+
+                                                    mex.getMessage(), mex);
         }
     }
 }

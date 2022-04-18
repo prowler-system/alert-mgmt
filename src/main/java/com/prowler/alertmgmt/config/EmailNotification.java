@@ -15,4 +15,5 @@ public class EmailNotification {
     private String smtpPort;
     private String fromAddress;
     private String toAddress;
+    private String password;
 }
